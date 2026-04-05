@@ -6,6 +6,8 @@ trigger:
   paths:
       exclude: [ 'floto-client/*' ]
 
+pr: none
+
 resources:
 - repo: self
 
