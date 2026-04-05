@@ -1,5 +1,6 @@
-[![Board Status](https://dev.azure.com/datagility/97f607a6-4c98-44db-99e1-5b0cedd7c1bb/c676f2ef-bbcd-4759-b0cf-0c9a3f0d6b88/_apis/work/boardbadge/169faef9-c3d6-45cc-be28-1829ae7e145d)](https://dev.azure.com/datagility/97f607a6-4c98-44db-99e1-5b0cedd7c1bb/_boards/board/t/c676f2ef-bbcd-4759-b0cf-0c9a3f0d6b88/Microsoft.RequirementCategory)
 [![Build Status](https://dev.azure.com/datagility/floto/_apis/build/status%2Ffloto-api-gh?branchName=main)](https://dev.azure.com/datagility/floto/_build/latest?definitionId=3&branchName=main)
+
+[![Board Status](https://dev.azure.com/datagility/97f607a6-4c98-44db-99e1-5b0cedd7c1bb/c676f2ef-bbcd-4759-b0cf-0c9a3f0d6b88/_apis/work/boardbadge/169faef9-c3d6-45cc-be28-1829ae7e145d)](https://dev.azure.com/datagility/97f607a6-4c98-44db-99e1-5b0cedd7c1bb/_boards/board/t/c676f2ef-bbcd-4759-b0cf-0c9a3f0d6b88/Microsoft.RequirementCategory)
 
 # Floto-Api
 
