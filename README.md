@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/datagility/floto/_apis/build/status%2Ffloto-api-gh?branchName=main)](https://dev.azure.com/datagility/floto/_build/latest?definitionId=3&branchName=main)
+
 # Floto-Api
 
 Post short notes, including lattitude and longitude information.
