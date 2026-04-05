@@ -1,5 +1,9 @@
 # Floto-Api
 
+Post short notes, including lattitude and longitude information.
+
+Get notes by day.
+
 ## Setting infrastucture credentials
 
 `infra/.az/set_credentails.sh`
@@ -16,7 +20,7 @@ export ARM_TENANT_ID="<TENANT_VALUE>"
 
 `curl -H "Content-Type: application/json" -w '\n' -v -d"@Floto.Test/testdata/note.json" http://localhost:8080/api/v1/notes`
 
-Notes:
+## Further Reading:
 
 VNet / Container App / APIM
 
