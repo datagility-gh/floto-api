@@ -1,6 +1,8 @@
 name: '$(Build.BuildId) floto-client'
 
 trigger:
+  branches:
+    include: [ 'main' ]
   paths:
       include: [ 'floto-client/*' ]
 
