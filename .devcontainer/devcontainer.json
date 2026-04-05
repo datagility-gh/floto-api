@@ -1,0 +1,60 @@
+{
+	"name": "C# (.NET 10)",
+	"build": {
+		"dockerfile": "DockerFile"
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/azure-cli:1": {
+			"installUsingPython": true,
+			"version": "latest"
+		},
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+			"moby": true,
+			"installDockerBuildx": true,
+			"version": "latest",
+			"dockerDashComposeVersion": "v2"
+		},
+		"ghcr.io/devcontainers/features/node:1": {
+			"nodeGypDependencies": true,
+			"installYarnUsingApt": true,
+			"version": "lts",
+			"nvmVersion": "latest"
+		}
+	},
+	"runArgs": [
+		"--name",
+		"vsc-floto-api-10-gh",
+		"--network",
+		"host"
+	],
+	"remoteEnv": {
+		"PATH": "/home/vscode/.dotnet/tools:/home/vscode/bin:${containerEnv:PATH}"
+	},
+	"postCreateCommand": {
+		"reportGen": "dotnet tool install -g dotnet-reportgenerator-globaltool",
+		"swaggercli": "dotnet tool install -g Swashbuckle.AspNetCore.Cli --version 10.1.4",
+		"containerApp": "az extension add --name containerapp --upgrade",
+		"xpath": "sudo apt-get update && sudo apt-get install -y libxml-xpath-perl",
+		"tfswitch": "curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | sudo bash",
+		"terragrunt": "mkdir /home/vscode/bin && curl -L https://github.com/gruntwork-io/terragrunt/releases/download/v0.53.2/terragrunt_linux_arm64 > /home/vscode/bin/terragrunt && chmod u+x /home/vscode/bin/terragrunt"
+	},
+	"postStartCommand": {
+		"tf": "tfswitch 1.10.5"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"Orta.vscode-jest",
+				"ms-vscode.makefile-tools",
+				"ms-dotnettools.csdevkit",
+				"esbenp.prettier-vscode",
+				"HashiCorp.terraform",
+				"ms-python.python"
+			],
+			"settings": {
+				"jest.runMode": "on-demand",
+				"jest.rootPath": "floto-client"
+			}
+		}
+	}
+}

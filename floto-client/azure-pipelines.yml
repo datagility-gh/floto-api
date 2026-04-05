@@ -1,0 +1,93 @@
+name: '$(Build.BuildId) floto-client'
+
+trigger:
+  paths:
+      include: [ 'floto-client/*' ]
+
+resources:
+- repo: self
+
+variables:
+  azureSubscription: 'dev01-floto-sc'
+  vmImageName: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: Build and publish stage
+  jobs:
+  - job: Build
+    displayName: Build and publish
+    pool:
+      vmImage: $(vmImageName)
+    
+    steps:
+    - task: npmAuthenticate@0
+      displayName: 'npm authenticate'
+      inputs:
+        workingFile: floto-client/.npmrc
+
+    - task: Bash@3
+      displayName: Install dependencies
+      inputs:
+        targetType: 'inline'
+        script: |
+          make install/ci
+
+    - task: Bash@3
+      displayName: Run linting
+      inputs:
+        targetType: 'inline'
+        script: |
+          make lint
+
+    - task: Bash@3
+      displayName: Run unit tests
+      inputs:
+        targetType: 'inline'
+        script: |
+          make test/client/coverage
+
+    - task: PublishTestResults@2
+      displayName: 'Publish test results'
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'junit.xml'
+        searchFolder: 'floto-client/test-results'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+    
+    - task: PublishCodeCoverageResults@2
+      displayName: 'Publish code coverage results'
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: 'floto-client/coverage/cobertura-coverage.xml'
+
+    - task: Bash@3
+      displayName: Get the current package patch number
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "##vso[task.setvariable variable=currNpmPatch;]$(make version/client/remote/patch)"
+
+    - task: Bash@3
+      displayName: Increment the patch number
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo Current patch: $(currNpmPatch)
+          echo "##vso[task.setvariable variable=newNpmPatch;]$(expr $(currNpmPatch) + 1)"
+
+    - task: Bash@3
+      displayName: Build the npm package
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo New patch: $(newNpmPatch)
+          make pack CLIENT_PATCH_VERSION=$(newNpmPatch)
+
+    - task: Bash@3
+      displayName: Publish to the npm feed
+      inputs:
+        targetType: 'inline'
+        script: |
+          make publish

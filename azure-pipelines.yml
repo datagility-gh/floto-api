@@ -1,0 +1,142 @@
+name: '$(Build.BuildId) floto-api'
+
+trigger:
+  branches:
+    include: [ 'main' ]
+  paths:
+      exclude: [ 'floto-client/*' ]
+
+resources:
+- repo: self
+
+variables:
+- group: non-prod
+- name: vmImageName
+  value: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: Build and deploy stage
+  jobs:
+  - job: Build
+    displayName: Build and deploy
+    pool:
+      vmImage: $(vmImageName)
+    
+    steps:
+
+    - task: Bash@3
+      displayName: Run unit tests
+      inputs:
+        targetType: 'inline'
+        script: |
+          make test/coverage
+
+    - task: PublishTestResults@2
+      displayName: 'Publish test results'
+      inputs:
+        testRunTitle: 'Unit Tests'
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '*.trx'
+        searchFolder: 'Floto.Test/TestResults'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+    
+    - task: PublishCodeCoverageResults@2
+      displayName: 'Publish code coverage results'
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: 'Floto.Test/TestResults/*/In/*/coverage.cobertura.xml'
+
+    - task: Bash@3
+      displayName: Install xpath
+      inputs:
+        targetType: 'inline'
+        script: |
+          sudo apt update && sudo apt install libxml-xpath-perl
+
+    - task: DockerInstaller@0
+      displayName: Install docker tools
+      inputs:
+        dockerVersion: '23.0.6'
+
+    - task: AzureCLI@2
+      displayName: Push the docker image
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: 'make push/docker PROJECT_PATCH_VERSION=$(Build.BuildId) STACK=$(Build.SourceBranchName)'
+
+    - task: TerraformInstaller@1
+      displayName: Install terraform tools
+      inputs:
+        terraformVersion: '1.6.4'
+
+    - task: AzureKeyVault@2
+      displayName: Fetch Key Vault secrets
+      inputs:
+        azureSubscription: $(azureSubscription)
+        KeyVaultName: $(keyVaultName)
+        RunAsPreJob: false
+
+    - task: Bash@3
+      displayName: Install swashbuckle cli
+      inputs:
+        targetType: 'inline'
+        script: |
+          dotnet tool install -g Swashbuckle.AspNetCore.Cli --version 10.1.4
+
+    - task: AzureCLI@2
+      displayName: Apply terraform
+      inputs:
+        azureSubscription: $(azureSubscription)
+        addSpnToEnvironment: true
+        failOnStandardError: true
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          export ARM_CLIENT_ID=$servicePrincipalId
+          export ARM_CLIENT_SECRET=$servicePrincipalKey
+          export ARM_SUBSCRIPTION_ID=$(subscriptionId)
+          export ARM_TENANT_ID=$tenantId
+          export ARM_ACCESS_KEY=$(non-prod-tf-arm-access-key)
+          ENV=non_prod make apply STACK=$(Build.SourceBranchName) INFRA_AUTO_APPROVE=true
+          echo "##vso[task.setvariable variable=appBaseUrl;]$(make output/api_url_floto)"
+          echo "##vso[task.setvariable variable=appSubKey;]$(make output/api_key_floto)"
+
+    - task: AzureCLI@2
+      displayName: Update container app image
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: 'make update/docker STACK=$(Build.SourceBranchName)'
+
+    - task: UseNode@1
+      displayName: Install node tools
+      inputs:
+        version: '18.x'
+
+    - task: npmAuthenticate@0
+      displayName: Add credentials for private npm registry
+      inputs:
+        workingFile: floto-client/.npmrc
+
+    - task: Bash@3
+      displayName: Run integration tests
+      inputs:
+        targetType: 'inline'
+        script: |
+          make pack
+          make test/client/int APP_BASE_URL="$(appBaseUrl)/v1/" APP_SUB_KEY="$(appSubKey)"
+
+    - task: PublishTestResults@2
+      displayName: 'Publish integration test results'
+      inputs:
+        testRunTitle: 'Integration Tests'
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'junit.xml'
+        searchFolder: 'floto-client/test-results'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
