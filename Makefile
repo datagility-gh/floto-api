@@ -21,7 +21,7 @@ AZ_RUNTIME_IMAGE := -noble-amd64
 APP_CONTAINER_NAME := floto-api
 APP_CONTAINER_PORT := 8080
 DB_EMULATOR_IMAGE_NAME := mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
-DB_EMULATOR_CONTAINER_NAME := cosmos-emulator
+DB_EMULATOR_DOCKER_CONTAINER_NAME := cosmos-emulator
 DB_EMULATOR_PORT := 8081
 DB_EMULATOR_EXPLORER_PORT := 1234
 DB_EMULATOR_KEY := C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
@@ -195,7 +195,7 @@ start: stop start/db migrate/db
 	make build/docker
 	docker run --name $(APP_CONTAINER_NAME) \
 		-e ASPNETCORE_ENVIRONMENT=Development \
-		-e COSMOSDB_CONNECTION_STRING='AccountEndpoint=http://$(shell docker inspect $(DB_EMULATOR_CONTAINER_NAME) | jq  -r '.[].NetworkSettings.Networks.bridge.IPAddress'):${DB_EMULATOR_PORT}/;AccountKey=${DB_EMULATOR_KEY};' \
+		-e COSMOSDB_CONNECTION_STRING='AccountEndpoint=http://$(shell docker inspect $(DB_EMULATOR_DOCKER_CONTAINER_NAME) | jq  -r '.[].NetworkSettings.Networks.bridge.IPAddress'):${DB_EMULATOR_PORT}/;AccountKey=${DB_EMULATOR_KEY};' \
 		-e Stack=$(STACK) \
 		-p $(APP_CONTAINER_PORT):$(APP_CONTAINER_PORT) \
 		-d $(APP_CONTAINER_NAME):$(STACK)
@@ -210,15 +210,16 @@ stop: stop/db
 .PHONY: start/db
 start/db: stop/db
 	DOCKER_DEFAULT_PLATFORM=linux/amd64 docker run \
-		--name ${DB_EMULATOR_CONTAINER_NAME} \
+		--name ${DB_EMULATOR_DOCKER_CONTAINER_NAME} \
 		-p ${DB_EMULATOR_PORT}:8081 -p ${DB_EMULATOR_EXPLORER_PORT}:1234 \
 		-e PROTOCOL=http \
+		-e GATEWAY_PUBLIC_ENDPOINT="*" \
 		-d ${DB_EMULATOR_IMAGE_NAME}
 
 # stop the database emulator
 .PHONY: stop/db
 stop/db:
-	docker rm -f ${DB_EMULATOR_CONTAINER_NAME} || true
+	docker rm -f ${DB_EMULATOR_DOCKER_CONTAINER_NAME} || true
 
 # push the docker image to the container registry
 # can override the project patch version and the build branch

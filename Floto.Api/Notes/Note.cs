@@ -4,6 +4,8 @@ namespace Floto.Api.Notes
 {
     public record Note
     {
+        public static string DateFormat => "yyyyMMdd";
+
         [JsonPropertyName("id")]
         public string Id { get; init; } = Guid.NewGuid().ToString();
 
@@ -11,7 +13,8 @@ namespace Floto.Api.Notes
         public DateTime Timestamp { get; init; } = DateTime.UtcNow;
 
         [JsonPropertyName("date")]
-        public string Date => Timestamp.ToString("yyyyMMdd");
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenReading)]
+        public string Date => Timestamp.ToString(DateFormat);
 
         [JsonPropertyName("category")]
         public required NoteCategory Category { get; init; }

@@ -6,7 +6,7 @@ namespace Floto.Api.Notes
     [Route("v1/notes")]
     public class NotesController : ControllerBase
     {
-        private readonly INoteRepository _repository;
+        private readonly INoteRepository repository;
 
         private readonly ILogger<NotesController> logger;
 
@@ -14,7 +14,7 @@ namespace Floto.Api.Notes
             INoteRepository repository,
             ILogger<NotesController> logger)
         {
-            _repository = repository;
+            this.repository = repository;
             this.logger = logger;
         }
 
@@ -24,9 +24,28 @@ namespace Floto.Api.Notes
         {
             logger.LogDebug("starting Post - {Note}", note);
 
-            var created = await _repository.CreateAsync(note);
+            var created = await repository.CreateAsync(note);
 
             return CreatedAtAction(nameof(Post), new { id = created.Id }, created);
+        }
+
+        [HttpGet]
+        [Route("{date}")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Description = "The notes were retrieved successfully.")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Description = "Invalid date format.")]
+        public async Task<IActionResult> Get(string date)
+        {
+            logger.LogDebug("starting Get - {Date}", date);
+
+            if (!DateOnly.TryParseExact(date, Note.DateFormat, out DateOnly parsedDate))
+            {
+                return BadRequest($"Invalid date format. Please use the format '{Note.DateFormat}'.");
+            }
+
+            var notes = await repository.GetAsync(parsedDate);
+
+            return Ok(notes);
         }
     }
 }
