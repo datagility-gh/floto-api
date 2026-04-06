@@ -72,7 +72,7 @@ builder.Services.AddSingleton(sp =>
     {
         // Direct mode is recommended for private endpoints, but it doesn't work with
         // the Cosmos DB emulator
-        ConnectionMode = cosmosDbCxn.Contains("localhost") ?
+        ConnectionMode = builder.Environment.IsDevelopment() ?
             ConnectionMode.Gateway : ConnectionMode.Direct,
         SerializerOptions = new CosmosSerializationOptions
         {

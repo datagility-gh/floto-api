@@ -22,7 +22,9 @@ export ARM_TENANT_ID="<TENANT_VALUE>"
 ```
 ## Posting Notes
 
-`curl -H "Content-Type: application/json" -w '\n' -v -d"@Floto.Test/testdata/note.json" http://localhost:8080/api/v1/notes`
+Running the API in a container locally with the CosmosDB emulator
+
+`curl -H "Content-Type: application/json" -w '\n' -v -d "@Floto.Test/testdata/note.json" http://localhost:8080/api/v1/notes`
 
 ## Further Reading:
 
