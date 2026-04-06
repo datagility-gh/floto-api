@@ -24,8 +24,10 @@ public class NotesControllerTest
             Category = NoteCategory.General,
             Content = "Test content"
         };
+
         var createdNote = note with { Id = "test-id" };
         mockRepository.Setup(r => r.CreateAsync(note)).ReturnsAsync(createdNote);
+
         var controller = new NotesController(
             mockRepository.Object,
             mockLogger.Object);
@@ -39,5 +41,45 @@ public class NotesControllerTest
         createdResult.ActionName.Should().Be(nameof(NotesController.Post));
         createdResult.RouteValues.Should().ContainKey("id").WhoseValue.Should().Be("test-id");
         createdResult.Value.Should().Be(createdNote);
+    }
+
+    [Fact(DisplayName = "Get with invalid date returns BadRequest")]
+    public async Task Get_InvalidDate_ReturnsBadRequest()
+    {
+        //Arrange
+        var controller = new NotesController(
+            mockRepository.Object,
+            mockLogger.Object);
+
+        // Act
+        var result = await controller.Get("invalid-date");
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact(DisplayName = "Get with valid date returns notes")]
+    public async Task Get_ValidDate_ReturnsNotes()
+    {
+        //Arrange
+        mockRepository.Setup(r => r.GetAsync(It.IsAny<DateOnly>())).ReturnsAsync(new List<Note>
+        {
+            new Note { Id = "1", Category = NoteCategory.General, Content = "Note 1" },
+            new Note { Id = "2", Category = NoteCategory.General, Content = "Note 2" }
+        });
+
+        var controller = new NotesController(
+            mockRepository.Object,
+            mockLogger.Object);
+
+        // Act
+        var result = await controller.Get("20260430");
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        var okResult = (OkObjectResult)result;
+        okResult.Value.Should().BeOfType<List<Note>>();
+        var notes = (List<Note>)okResult.Value;
+        notes.Should().HaveCount(2);
     }
 }

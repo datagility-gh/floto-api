@@ -20,11 +20,17 @@ export ARM_CLIENT_SECRET="<PASSWORD_VALUE>"
 export ARM_SUBSCRIPTION_ID="<SUBSCRIPTION_ID>"
 export ARM_TENANT_ID="<TENANT_VALUE>"
 ```
-## Posting Notes
+## Creating and Retrieving Notes
 
 Running the API in a container locally with the CosmosDB emulator
 
+### Post
+
 `curl -H "Content-Type: application/json" -w '\n' -v -d "@Floto.Test/testdata/note.json" http://localhost:8080/api/v1/notes`
+
+### Get
+
+`curl -w '\n' http://localhost:8080/api/v1/notes/20260406`
 
 ## Further Reading:
 
