@@ -6,7 +6,7 @@ resource "azurerm_cosmosdb_sql_database" "sqldb_floto" {
 }
 
 resource "azurerm_cosmosdb_sql_container" "sql_container_floto" {
-  name                  = "sql-cont-floto"
+  name                  = "notes"
   resource_group_name   = var.resource_group_name
   account_name          = var.cosmosdb_account_name
   database_name         = azurerm_cosmosdb_sql_database.sqldb_floto.name
