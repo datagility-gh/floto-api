@@ -101,7 +101,7 @@ resource "azurerm_container_app" "ca-floto-api" {
       }
       env {
         name  = "CosmosDb__ContainerId"
-        value = "sql-cont-floto"
+        value = "notes"
       }
 
       readiness_probe {

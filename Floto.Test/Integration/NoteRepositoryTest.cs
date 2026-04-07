@@ -8,7 +8,7 @@ namespace Floto.Test.Integration;
 public class NoteRepositoryTest
 {
     const string DatabaseId = "local-sqldb-floto";
-    const string ContainerId = "sql-cont-floto";
+    const string ContainerId = "notes";
 
     private readonly INoteRepository noteRepository;
 
