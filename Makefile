@@ -158,7 +158,8 @@ test/coverage:
 	rm -rf ./Floto.Test/TestResults/
 	dotnet test --filter FullyQualifiedName!~Integration. Floto.Test --logger "trx;logfilename=Floto.Test.trx" \
 		--collect:"XPlat Code Coverage" \
-		-- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Program.cs,**/*Repository.cs"
+		-- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Program.cs,**/*Repository.cs" \
+		-- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByAttribute="GeneratedCodeAttribute"
 
 # run the dotnet unit tests and generate the code coverage html report
 .PHONY: test/coverage/report
