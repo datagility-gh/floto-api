@@ -82,13 +82,6 @@ stages:
         KeyVaultName: $(keyVaultName)
         RunAsPreJob: false
 
-    - task: Bash@3
-      displayName: Install swashbuckle cli
-      inputs:
-        targetType: 'inline'
-        script: |
-          dotnet tool install -g Swashbuckle.AspNetCore.Cli --version 10.1.4
-
     - task: AzureCLI@2
       displayName: Apply terraform
       inputs:
@@ -126,7 +119,7 @@ stages:
         workingFile: floto-client/.npmrc
 
     - task: Bash@3
-      displayName: Run integration tests
+      displayName: Run client integration tests
       inputs:
         targetType: 'inline'
         script: |
@@ -134,9 +127,9 @@ stages:
           make test/client/int APP_BASE_URL="$(appBaseUrl)/v1/" APP_SUB_KEY="$(appSubKey)"
 
     - task: PublishTestResults@2
-      displayName: 'Publish integration test results'
+      displayName: 'Publish client integration test results'
       inputs:
-        testRunTitle: 'Integration Tests'
+        testRunTitle: 'Client Integration Tests'
         testResultsFormat: 'JUnit'
         testResultsFiles: 'junit.xml'
         searchFolder: 'floto-client/test-results'

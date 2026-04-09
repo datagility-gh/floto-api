@@ -16,7 +16,6 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi(options =>
 {
-    options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1;
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
         document.Info = new()

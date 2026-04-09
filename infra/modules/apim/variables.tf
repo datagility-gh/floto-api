@@ -45,8 +45,8 @@ variable "protocol" {
   default     = "http"
 }
 
-variable "swagger_filepath" {
-  description = "Path to a Swagger definition file for the API."
+variable "openapi_filepath" {
+  description = "Path to an OpenAPI definition file for the API."
 }
 
 variable "app_insights_id" {
