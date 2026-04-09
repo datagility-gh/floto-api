@@ -77,7 +77,8 @@ lint:
 	npm --prefix $(CLIENT_DIR) run lint
 
 # build the dotnet solution
-build: 
+build: export COSMOSDB_CONNECTION_STRING=dummy
+build:
 	dotnet build
 
 # build the client

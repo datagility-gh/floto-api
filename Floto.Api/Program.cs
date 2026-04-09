@@ -14,13 +14,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+builder.Services.AddOpenApi(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1;
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        Version = "v1",
-        Title = "Floto",
-        Description = "API for building and getting flows",
+        document.Info = new()
+        {
+            Title = "Floto",
+            Version = "v1",
+            Description = "API for building and getting flows."
+        };
+        return Task.CompletedTask;
     });
 });
 
@@ -95,11 +100,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty;
-    });
+    app.MapOpenApi("/openapi/floto.json");
 }
 
 app.Configuration["Version"] = Assembly.GetEntryAssembly()?
