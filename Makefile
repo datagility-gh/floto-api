@@ -77,7 +77,8 @@ lint:
 	npm --prefix $(CLIENT_DIR) run lint
 
 # build the dotnet solution
-build: 
+build: export COSMOSDB_CONNECTION_STRING=dummy
+build:
 	dotnet build
 
 # build the client
@@ -168,12 +169,6 @@ test/coverage/report: test/coverage
 
 publish:
 	cd $(CLIENT_DIR) && npm publish floto-client-*.tgz
-
-# create a swagger definition file for the app
-.PHONY: publish/swagger
-publish/swagger: export COSMOSDB_CONNECTION_STRING=dummy
-publish/swagger: build
-	swagger tofile --output Floto.Api/floto-openapi.json Floto.Api/bin/Debug/net10.0/Floto.Api.dll v1
 
 # generate .NET code for creating the Cosmos DB container from the TF definition
 .PHONY: generate/db
@@ -291,7 +286,7 @@ check-var-%:
 	@ if [ "${${*}}" = "" ]; then echo "environment variable '$*' not set"; exit 1; fi
 
 # . ./.az/set_credentials.sh && ENV=non_prod make plan STACK=main
-plan: init publish/swagger
+plan: init
 	@echo "************************************************************"
 	@echo "* ACTION:		PLAN"
 	@echo "* ENV:			$(ENV)"
@@ -308,7 +303,7 @@ plan: init publish/swagger
 # . ./.az/set_credentials.sh && ENV=non_prod make apply STACK=main INFRA_AUTO_APPROVE=true
 # With credentials already set (e.g. CI)
 # ENV=non_prod make apply STACK=main INFRA_AUTO_APPROVE=true
-apply: init publish/swagger
+apply: init
 	@echo "************************************************************"
 	@echo "* ACTION:		APPLY"
 	@echo "* ENV:			$(ENV)"

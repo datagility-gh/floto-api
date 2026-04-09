@@ -32,7 +32,6 @@
 	},
 	"postCreateCommand": {
 		"reportGen": "dotnet tool install -g dotnet-reportgenerator-globaltool",
-		"swaggercli": "dotnet tool install -g Swashbuckle.AspNetCore.Cli --version 10.1.4",
 		"containerApp": "az extension add --name containerapp --upgrade",
 		"xpath": "sudo apt-get update && sudo apt-get install -y libxml-xpath-perl",
 		"tfswitch": "curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | sudo bash",

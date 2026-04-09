@@ -14,7 +14,7 @@ RUN dotnet restore
 # copy everything else and build app
 COPY Floto.Api/. .
 ARG ASMVERSION=1.0.0
-RUN dotnet publish --no-restore -o /app/publish /p:FileVersion=$ASMVERSION
+RUN COSMOSDB_CONNECTION_STRING=dummy dotnet publish --no-restore -o /app/publish /p:FileVersion=$ASMVERSION
 
 FROM base AS final
 WORKDIR /app

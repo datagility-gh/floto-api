@@ -99,11 +99,11 @@ module "apim" {
   company                          = var.company
   display_name                     = "floto-api"
   location                         = var.location
+  openapi_filepath                 = "../Floto.Api/floto-openapi.json"
   publisher_email                  = var.company_email
   resource_group_name              = azurerm_resource_group.app-rg.name
   revision                         = 1
   stack                            = var.stack
-  swagger_filepath                 = "../Floto.Api/floto-openapi.json"
   subnet_id                        = module.network.subnet_id_shared
   app_insights_id                  = azurerm_application_insights.appi-floto.id
   app_insights_instrumentation_key = azurerm_application_insights.appi-floto.instrumentation_key

@@ -30,7 +30,7 @@ resource "azurerm_api_management_api" "api-floto-api" {
 
   import {
     content_format = "openapi"
-    content_value  = file(var.swagger_filepath)
+    content_value  = file(var.openapi_filepath)
   }
 }
 
