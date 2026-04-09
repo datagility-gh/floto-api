@@ -126,7 +126,7 @@ pack: build/client
 
 # run the dotnet unit tests
 test:
-	dotnet test --filter FullyQualifiedName!~Integration. Floto.Test
+	COSMOSDB_CONNECTION_STRING=dummy dotnet test --filter FullyQualifiedName!~Integration. Floto.Test
 
 # run the dotnet integration tests
 .PHONY: test/int
@@ -155,6 +155,7 @@ test/client/int:
 
 # run the dotnet unit tests and generate the code coverage stats
 .PHONY: test/coverage
+test/coverage: export COSMOSDB_CONNECTION_STRING=dummy
 test/coverage:
 	rm -rf ./Floto.Test/TestResults/
 	dotnet test --filter FullyQualifiedName!~Integration. Floto.Test --logger "trx;logfilename=Floto.Test.trx" \
