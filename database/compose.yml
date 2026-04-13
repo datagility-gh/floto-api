@@ -37,3 +37,7 @@ services:
     depends_on:
       floto-db:
         condition: service_healthy
+
+networks:
+  default:
+    name: floto-network

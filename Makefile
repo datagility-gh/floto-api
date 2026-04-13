@@ -21,6 +21,7 @@ AZ_TARGET_PLATFORM := linux/amd64
 AZ_RUNTIME_IMAGE := -noble-amd64
 APP_CONTAINER_NAME := floto-api
 APP_CONTAINER_PORT := 8080
+DB_EMULATOR_NETWORK_NAME := floto-network
 DB_EMULATOR_DOCKER_CONTAINER_NAME := cosmos-emulator
 DB_EMULATOR_PORT := 8081
 DB_EMULATOR_KEY := C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
@@ -126,7 +127,8 @@ test:
 
 # run the dotnet integration tests
 .PHONY: test/int
-test/int: start/db migrate/db
+test/int: export COSMOSDB_CONNECTION_STRING=dummy
+test/int: start/db
 	dotnet test --filter FullyQualifiedName~Integration. Floto.Test
 
 # run the client jest unit tests
@@ -178,7 +180,7 @@ start: stop start/db
 	make build/docker
 	docker run --name $(APP_CONTAINER_NAME) \
 		-e ASPNETCORE_ENVIRONMENT=Development \
-		-e COSMOSDB_CONNECTION_STRING='AccountEndpoint=http://$(shell docker inspect $(DB_EMULATOR_DOCKER_CONTAINER_NAME) | jq  -r '.[].NetworkSettings.Networks.bridge.IPAddress'):${DB_EMULATOR_PORT}/;AccountKey=${DB_EMULATOR_KEY};' \
+		-e COSMOSDB_CONNECTION_STRING='AccountEndpoint=http://$(shell docker inspect $(DB_EMULATOR_DOCKER_CONTAINER_NAME) | jq  -r ".[].NetworkSettings.Networks.\"$(DB_EMULATOR_NETWORK_NAME)\".IPAddress"):${DB_EMULATOR_PORT}/;AccountKey=${DB_EMULATOR_KEY};' \
 		-e Stack=$(STACK) \
 		-p $(APP_CONTAINER_PORT):$(APP_CONTAINER_PORT) \
 		-d $(APP_CONTAINER_NAME):$(STACK)
@@ -194,7 +196,7 @@ stop: stop/db
 .PHONY: start/db
 start/db: export VOLUME_ROOT_DIR=$(CODE_ROOT_DIR)
 start/db: stop/db
-	docker compose -f ./database/compose.yml up --detach 
+	docker compose -f ./database/compose.yml up --attach floto-db-migrator
 
 # stop the database emulator
 .PHONY: stop/db
