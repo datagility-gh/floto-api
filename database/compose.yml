@@ -11,10 +11,10 @@ services:
       - 8081:8081
       - 1234:1234
     environment:
-      PROTOCOL: "http"
+      PROTOCOL: http
       GATEWAY_PUBLIC_ENDPOINT: "*"
-      LOG_LEVEL: "warn"
-      ENABLE_TELEMETRY: "false"
+      LOG_LEVEL: warn
+      ENABLE_TELEMETRY: false
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/alive" ]
       interval: 2m
@@ -37,7 +37,3 @@ services:
     depends_on:
       floto-db:
         condition: service_healthy
-
-networks:
-  default:
-    name: floto-network
