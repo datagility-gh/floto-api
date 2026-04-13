@@ -1,5 +1,5 @@
 # E.g.
-# docker compose -f ./database/compose.yml up
+# VOLUME_ROOT_DIR=$(pwd) docker compose -f ./database/compose.yml up
 
 name: floto-db
 
@@ -22,3 +22,18 @@ services:
       retries: 1
       start_period: 10s
       start_interval: 1s
+
+  floto-db-migrator:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: cosmos-emulator-migrator
+    command: [ "dotnet", "run", "--no-launch-profile", "--file", "migrate/CreateContainer.cs" ]
+    environment:
+      COSMOS_ACCOUNT_ENDPOINT: http://floto-db:8081
+      COSMOS_ACCOUNT_KEY: C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
+      COSMOS_DATABASE_ID: local-sqldb-floto
+      COSMOS_CONTAINER_ID: notes
+    volumes:
+        - ${VOLUME_ROOT_DIR}/database:/migrate
+    depends_on:
+      floto-db:
+        condition: service_healthy

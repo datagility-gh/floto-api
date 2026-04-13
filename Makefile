@@ -1,3 +1,4 @@
+CODE_ROOT_DIR ?= $(shell pwd)
 BRANCH_ID := $(shell git branch --show-current | cut -d '/' -f2 | cut -d '-' -f1)
 STACK := local
 STACK_INFRA_PREFIX := f
@@ -20,14 +21,9 @@ AZ_TARGET_PLATFORM := linux/amd64
 AZ_RUNTIME_IMAGE := -noble-amd64
 APP_CONTAINER_NAME := floto-api
 APP_CONTAINER_PORT := 8080
-DB_EMULATOR_IMAGE_NAME := mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
 DB_EMULATOR_DOCKER_CONTAINER_NAME := cosmos-emulator
 DB_EMULATOR_PORT := 8081
-DB_EMULATOR_EXPLORER_PORT := 1234
 DB_EMULATOR_KEY := C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
-DB_EMULATOR_MIGRATION_FILE := database/CreateContainer.cs
-DB_EMULATOR_DB_NAME := ${STACK}-sqldb-floto
-DB_EMULATOR_CONTAINER_NAME := notes
 APP_API_PATH := api/v1/
 APP_BASE_URL := http://127.0.0.1:$(APP_CONTAINER_PORT)/$(APP_API_PATH)
 CI_IMAGE_TAG := $(PROJECT_BUILD_VERSION)
@@ -108,7 +104,7 @@ build/docker/az:
 
 # run the api locally, outside of a container
 # app listens on port $(APP_CONTAINER_PORT), e.g. http://localhost:8080/api/v1/ping
-run: start/db migrate/db
+run: start/db
 	dotnet run --project ./$(API_DIR)/ \
 		-e ASPNETCORE_ENVIRONMENT=Development \
 		-e COSMOSDB_CONNECTION_STRING='AccountEndpoint=http://localhost:${DB_EMULATOR_PORT}/;AccountKey=${DB_EMULATOR_KEY};' \
@@ -176,19 +172,9 @@ publish:
 generate/db:
 	python3 database/cosmostf2dotnet.py < infra/modules/cosmosdb/main.tf > database/CreateContainer.cs
 
-# run the generated .NET code to create the Cosmos DB container in the emulator
-.PHONY: migrate/db
-migrate/db: export COSMOS_ACCOUNT_ENDPOINT=http://localhost:${DB_EMULATOR_PORT}
-migrate/db: export COSMOS_ACCOUNT_KEY=${DB_EMULATOR_KEY}
-migrate/db: export COSMOS_DATABASE_ID=${DB_EMULATOR_DB_NAME}
-migrate/db: export COSMOS_CONTAINER_ID=${DB_EMULATOR_CONTAINER_NAME}
-migrate/db: generate/db
-	sleep 10 # wait for the emulator to be ready to accept connections
-	dotnet run --no-launch-profile --file ${DB_EMULATOR_MIGRATION_FILE}
-
 # start the app in a docker container
 # app listens on port $(APP_CONTAINER_PORT), e.g. http://localhost:8080/api/v1/ping
-start: stop start/db migrate/db
+start: stop start/db
 	make build/docker
 	docker run --name $(APP_CONTAINER_NAME) \
 		-e ASPNETCORE_ENVIRONMENT=Development \
@@ -201,22 +187,19 @@ start: stop start/db migrate/db
 stop: stop/db
 	docker rm -f $(APP_CONTAINER_NAME) || true
 
-# start the database emulator
+# start the database emulator and create the notes container
 # db listens on port ${DB_EMULATOR_PORT}, e,g, http://localhost:8081
-# explorer listens on port ${DB_EMULATOR_EXPLORER_PORT} e.g. http://localhost:1234/
+# explorer listens on port 1234 e.g. http://localhost:1234/
+# NOTE: override CODE_ROOT_DIR in your shell if e.g. running in a devcontainer.
 .PHONY: start/db
+start/db: export VOLUME_ROOT_DIR=$(CODE_ROOT_DIR)
 start/db: stop/db
-	DOCKER_DEFAULT_PLATFORM=linux/amd64 docker run \
-		--name ${DB_EMULATOR_DOCKER_CONTAINER_NAME} \
-		-p ${DB_EMULATOR_PORT}:8081 -p ${DB_EMULATOR_EXPLORER_PORT}:1234 \
-		-e PROTOCOL=http \
-		-e GATEWAY_PUBLIC_ENDPOINT="*" \
-		-d ${DB_EMULATOR_IMAGE_NAME}
+	docker compose -f ./database/compose.yml up --detach 
 
 # stop the database emulator
 .PHONY: stop/db
 stop/db:
-	docker rm -f ${DB_EMULATOR_DOCKER_CONTAINER_NAME} || true
+	docker compose -f ./database/compose.yml down
 
 # push the docker image to the container registry
 # can override the project patch version and the build branch
