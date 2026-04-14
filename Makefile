@@ -125,7 +125,7 @@ test:
 # run the dotnet integration tests
 .PHONY: test/int
 test/int: export COSMOSDB_CONNECTION_STRING=dummy
-test/int: start/db
+test/int: stop start/db
 	dotnet test --filter FullyQualifiedName~Integration. Floto.Test
 
 # run the client jest unit tests
@@ -175,11 +175,11 @@ generate/db:
 # app listens on port $(APP_CONTAINER_PORT), e.g. http://localhost:8080/api/v1/ping
 # NOTE: override CODE_ROOT_DIR in your shell if e.g. running in a devcontainer.
 start: export VOLUME_ROOT_DIR=$(CODE_ROOT_DIR)
-start: stop build/docker
+start: stop build/docker generate/db
 	docker compose -f ./database/compose.yml -f ./Floto.Api/compose.yml up --detach
 
 # stop the local app container
-stop:
+stop: stop/db
 	docker compose -f ./database/compose.yml -f ./Floto.Api/compose.yml down
 
 # start the database emulator and create the notes container
@@ -188,7 +188,7 @@ stop:
 # NOTE: override CODE_ROOT_DIR in your shell if e.g. running in a devcontainer.
 .PHONY: start/db
 start/db: export VOLUME_ROOT_DIR=$(CODE_ROOT_DIR)
-start/db: stop/db
+start/db: stop/db generate/db
 	docker compose -f ./database/compose.yml up --attach floto-db-migrator
 
 # stop the database emulator
