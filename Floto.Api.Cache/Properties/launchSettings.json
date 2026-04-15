@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Floto_Api_Cache": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7083",
+      "launchBrowser": false
+    }
+  }
+}
