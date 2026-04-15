@@ -8,11 +8,11 @@ FROM mcr.microsoft.com/dotnet/sdk:$DOTNETVERSION AS build
 WORKDIR /source
 
 # copy csproj and restore as distinct layers
-COPY Floto.Api/Floto.Api.csproj .
+COPY Floto.Api.csproj .
 RUN dotnet restore 
 
 # copy everything else and build app
-COPY Floto.Api/. .
+COPY . .
 ARG ASMVERSION=1.0.0
 RUN COSMOSDB_CONNECTION_STRING=dummy dotnet publish --no-restore -o /app/publish /p:FileVersion=$ASMVERSION
 

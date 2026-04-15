@@ -1,0 +1,11 @@
+# directories
+**/bin/
+**/obj/
+**/out/
+
+# files
+Dockerfile
+compose.yml
+.dockerignore
+
+appsettings.Development.json

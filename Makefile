@@ -81,15 +81,15 @@ build/client: install
 	rm -rf ./$(CLIENT_DIR)/dist
 	npm --prefix $(CLIENT_DIR) run build
 
-# build the runtime docker image
+# build the runtime docker image for the api
 # to override the image tag:
 #	make build/docker STACK={SOME_STACK}
 .PHONY: build/docker
 build/docker:
 	docker build --target final --tag $(APP_CONTAINER_NAME):$(STACK) \
-		--build-arg ASMVERSION=$(PROJECT_BUILD_VERSION) .
+		--build-arg ASMVERSION=$(PROJECT_BUILD_VERSION) ./Floto.Api/
 
-# build the runtime docker image for pushing to Azure
+# build the runtime docker image for the api for pushing to Azure
 # to override the image tag:
 #	make build/docker/az CI_IMAGE_TAG={SOME_TAG}
 # to override just the project patch version
@@ -98,7 +98,8 @@ build/docker:
 build/docker/az:
 	docker build --target final --tag $(APP_CONTAINER_NAME):$(CI_IMAGE_TAG) \
 		--platform=$(AZ_TARGET_PLATFORM) \
-		--build-arg RUNTIMEPLATFORM=$(AZ_RUNTIME_IMAGE) --build-arg ASMVERSION=$(PROJECT_BUILD_VERSION) .
+		--build-arg RUNTIMEPLATFORM=$(AZ_RUNTIME_IMAGE) --build-arg ASMVERSION=$(PROJECT_BUILD_VERSION) \
+		./Floto.Api/
 
 # run the api locally, outside of a container
 # app listens on port $(APP_CONTAINER_PORT), e.g. http://localhost:8080/api/v1/ping
