@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Floto.Api.Cache/Floto.Api.Cache.csproj" />
+  <Project Path="Floto.Api/Floto.Api.csproj" />
+  <Project Path="Floto.Test/Floto.Test.csproj" />
+</Solution>
