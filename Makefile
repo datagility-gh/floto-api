@@ -89,6 +89,11 @@ build/docker:
 	docker build --target final --tag $(APP_CONTAINER_NAME):$(STACK) \
 		--build-arg ASMVERSION=$(PROJECT_BUILD_VERSION) ./Floto.Api/
 
+.PHONY: build/docker/function
+build/docker/function:
+	docker build --tag floto-function:$(STACK) . \
+		-f ./Floto.Api.Cache/Dockerfile
+
 # build the runtime docker image for the api for pushing to Azure
 # to override the image tag:
 #	make build/docker/az CI_IMAGE_TAG={SOME_TAG}

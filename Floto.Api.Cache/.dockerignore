@@ -1,1 +1,14 @@
+# directories
+**/bin/
+**/obj/
+**/out/
+
+# files
+Dockerfile
+compose.yml
+.dockerignore
+
+appsettings.json
+appsettings.Development.json
+floto-openapi.json
 local.settings.json
