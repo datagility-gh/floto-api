@@ -202,6 +202,22 @@ start/db: stop/db generate/db
 stop/db:
 	docker compose -f ./database/compose.yml down
 
+# start the notes change feed function in a docker container
+# the function polls the Cosmos DB change feed for the notes container
+.PHONY: start/cache
+start/cache: stop/cache build/docker/function
+	docker run \
+		-e AzureWebJobsStorage='UseDevelopmentStorage=true' \
+		-e FUNCTIONS_WORKER_RUNTIME=dotnet-isolated \
+		-e COSMOSDB_CONNECTION_STRING='AccountEndpoint=http://$(shell docker inspect cosmos-emulator | jq  -r '.[].NetworkSettings.Networks."floto-api_default".IPAddress'):8081/;AccountKey=${DB_EMULATOR_KEY};' \
+		--name notes-change-feed-function \
+		floto-function:local
+
+# stop the notes change feed function
+.PHONY: stop/cache
+stop/cache:
+	docker rm -f notes-change-feed-function || true
+
 # push the docker image to the container registry
 # can override the project patch version and the build branch
 #	make push/docker PROJECT_PATCH_VERSION={SOME_PATCH} STACK={SOME_STACK}
