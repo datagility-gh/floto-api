@@ -209,6 +209,7 @@ start/cache: stop/cache build/docker/function
 	docker run \
 		-e AzureWebJobsStorage='UseDevelopmentStorage=true' \
 		-e FUNCTIONS_WORKER_RUNTIME=dotnet-isolated \
+		-e AzureFunctionsJobHost__logging__logLevel__Microsoft.Azure.WebJobs.Script.Diagnostics.HealthChecks=Error \
 		-e COSMOSDB_CONNECTION_STRING='AccountEndpoint=http://$(shell docker inspect cosmos-emulator | jq  -r '.[].NetworkSettings.Networks."floto-api_default".IPAddress'):8081/;AccountKey=${DB_EMULATOR_KEY};' \
 		--name notes-change-feed-function \
 		floto-function:local
