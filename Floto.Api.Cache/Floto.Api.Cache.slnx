@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../Floto.Api/Floto.Api.csproj" />
+  <Project Path="Floto.Api.Cache.csproj" />
+</Solution>

@@ -81,15 +81,20 @@ build/client: install
 	rm -rf ./$(CLIENT_DIR)/dist
 	npm --prefix $(CLIENT_DIR) run build
 
-# build the runtime docker image
+# build the runtime docker image for the api
 # to override the image tag:
 #	make build/docker STACK={SOME_STACK}
 .PHONY: build/docker
 build/docker:
 	docker build --target final --tag $(APP_CONTAINER_NAME):$(STACK) \
-		--build-arg ASMVERSION=$(PROJECT_BUILD_VERSION) .
+		--build-arg ASMVERSION=$(PROJECT_BUILD_VERSION) ./Floto.Api/
 
-# build the runtime docker image for pushing to Azure
+.PHONY: build/docker/function
+build/docker/function:
+	docker build --tag floto-function:$(STACK) . \
+		-f ./Floto.Api.Cache/Dockerfile
+
+# build the runtime docker image for the api for pushing to Azure
 # to override the image tag:
 #	make build/docker/az CI_IMAGE_TAG={SOME_TAG}
 # to override just the project patch version
@@ -98,7 +103,8 @@ build/docker:
 build/docker/az:
 	docker build --target final --tag $(APP_CONTAINER_NAME):$(CI_IMAGE_TAG) \
 		--platform=$(AZ_TARGET_PLATFORM) \
-		--build-arg RUNTIMEPLATFORM=$(AZ_RUNTIME_IMAGE) --build-arg ASMVERSION=$(PROJECT_BUILD_VERSION) .
+		--build-arg RUNTIMEPLATFORM=$(AZ_RUNTIME_IMAGE) --build-arg ASMVERSION=$(PROJECT_BUILD_VERSION) \
+		./Floto.Api/
 
 # run the api locally, outside of a container
 # app listens on port $(APP_CONTAINER_PORT), e.g. http://localhost:8080/api/v1/ping
@@ -195,6 +201,23 @@ start/db: stop/db generate/db
 .PHONY: stop/db
 stop/db:
 	docker compose -f ./database/compose.yml down
+
+# start the notes change feed function in a docker container
+# the function polls the Cosmos DB change feed for the notes container
+.PHONY: start/cache
+start/cache: stop/cache build/docker/function
+	docker run \
+		-e AzureWebJobsStorage='UseDevelopmentStorage=true' \
+		-e FUNCTIONS_WORKER_RUNTIME=dotnet-isolated \
+		-e AzureFunctionsJobHost__logging__logLevel__Microsoft.Azure.WebJobs.Script.Diagnostics.HealthChecks=Error \
+		-e COSMOSDB_CONNECTION_STRING='AccountEndpoint=http://$(shell docker inspect cosmos-emulator | jq  -r '.[].NetworkSettings.Networks."floto-api_default".IPAddress'):8081/;AccountKey=${DB_EMULATOR_KEY};' \
+		--name notes-change-feed-function \
+		floto-function:local
+
+# stop the notes change feed function
+.PHONY: stop/cache
+stop/cache:
+	docker rm -f notes-change-feed-function || true
 
 # push the docker image to the container registry
 # can override the project patch version and the build branch

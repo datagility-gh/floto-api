@@ -4,5 +4,6 @@
 **/out/
 
 # files
-Dockerfile*
-**/*.md
+Dockerfile
+compose.yml
+.dockerignore
