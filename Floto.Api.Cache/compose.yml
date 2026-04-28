@@ -1,0 +1,32 @@
+# E.g.
+# VOLUME_ROOT_DIR=$(pwd) docker compose -f ./database/compose.yml -f ./Floto.Api.Cache/compose.yml up
+
+name: floto-cache
+
+services:
+  floto-function:
+    image: floto-function:local
+    build:
+      context: ../
+      dockerfile: ../Dockerfile
+    container_name: notes-change-feed-function
+    ports:
+      - 8080:8080
+    environment:
+      AzureWebJobsStorage: UseDevelopmentStorage=true
+      FUNCTIONS_WORKER_RUNTIME: dotnet-isolated
+      AzureFunctionsJobHost__logging__logLevel__Microsoft.Azure.WebJobs.Script.Diagnostics.HealthChecks: Error
+      COSMOSDB_CONNECTION_STRING: 'AccountEndpoint=http://floto-db:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==;'
+    depends_on:
+      floto-db-migrator:
+        condition: service_completed_successfully
+      local-cache:
+        condition: service_healthy
+
+  local-cache:
+    image: redis:8.6.2
+    container_name: local-cache
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
