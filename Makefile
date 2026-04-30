@@ -202,22 +202,18 @@ start/db: stop/db generate/db
 stop/db:
 	docker compose -f ./database/compose.yml down
 
-# start the notes change feed function in a docker container
+# start the notes change feed function in a docker container and a local redis instance
 # the function polls the Cosmos DB change feed for the notes container
+# NOTE: override CODE_ROOT_DIR in your shell if e.g. running in a devcontainer.
 .PHONY: start/cache
+start/cache: export VOLUME_ROOT_DIR=$(CODE_ROOT_DIR)
 start/cache: stop/cache build/docker/function
-	docker run \
-		-e AzureWebJobsStorage='UseDevelopmentStorage=true' \
-		-e FUNCTIONS_WORKER_RUNTIME=dotnet-isolated \
-		-e AzureFunctionsJobHost__logging__logLevel__Microsoft.Azure.WebJobs.Script.Diagnostics.HealthChecks=Error \
-		-e COSMOSDB_CONNECTION_STRING='AccountEndpoint=http://$(shell docker inspect cosmos-emulator | jq  -r '.[].NetworkSettings.Networks."floto-api_default".IPAddress'):8081/;AccountKey=${DB_EMULATOR_KEY};' \
-		--name notes-change-feed-function \
-		floto-function:local
+	docker compose -f ./database/compose.yml -f ./Floto.Api.Cache/compose.yml up
 
-# stop the notes change feed function
+# stop the notes change feed function and the local redis instance
 .PHONY: stop/cache
 stop/cache:
-	docker rm -f notes-change-feed-function || true
+	docker compose -f ./database/compose.yml -f ./Floto.Api.Cache/compose.yml down
 
 # push the docker image to the container registry
 # can override the project patch version and the build branch
