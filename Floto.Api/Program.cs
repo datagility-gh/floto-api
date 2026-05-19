@@ -4,7 +4,6 @@ using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.FeatureManagement;
-using Microsoft.OpenApi;
 
 using Floto.Api.Settings;
 using Floto.Api.Notes;
