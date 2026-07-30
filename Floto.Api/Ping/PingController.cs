@@ -1,41 +1,40 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement;
 
-namespace Floto.Api.Ping
+namespace Floto.Api.Ping;
+
+[ApiController]
+[Route("v1/ping")]
+public class PingController : ControllerBase
 {
-    [ApiController]
-    [Route("v1/ping")]
-    public class PingController : ControllerBase
+    private readonly IFeatureManager featureManager;
+    private readonly ILogger<PingController> logger;
+    private readonly string appVersion;
+    private readonly string appStack;
+
+    public PingController(IConfiguration config,
+        IFeatureManager featureManager,
+        ILogger<PingController> logger)
     {
-        private readonly IFeatureManager featureManager;
-        private readonly ILogger<PingController> logger;
-        private readonly string appVersion;
-        private readonly string appStack;
+        this.featureManager = featureManager;
+        this.logger = logger;
 
-        public PingController(IConfiguration config,
-            IFeatureManager featureManager,
-            ILogger<PingController> logger)
+        appVersion = config["Version"]!;
+
+        appStack = config["Stack"]!;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> Ping()
+    {
+        logger.LogDebug("{appVersion} | starting Ping", appVersion);
+
+        string longVersion = $"{appStack}:{appVersion}";
+        if (await featureManager.IsEnabledAsync("Beta"))
         {
-            this.featureManager = featureManager;
-            this.logger = logger;
-
-            appVersion = config["Version"]!;
-
-            appStack = config["Stack"]!;
+            longVersion = string.Concat(longVersion, "-beta");
         }
 
-        [HttpGet]
-        public async Task<ActionResult> Ping()
-        {
-            logger.LogDebug("{appVersion} | starting Ping", appVersion);
-
-            string longVersion = $"{appStack}:{appVersion}";
-            if (await featureManager.IsEnabledAsync("Beta"))
-            {
-                longVersion = string.Concat(longVersion, "-beta");
-            }
-
-            return new OkObjectResult(longVersion);
-        }
+        return new OkObjectResult(longVersion);
     }
 }
