@@ -66,6 +66,9 @@ yarn.lock
 # local azure credentials
 .az/
 
+# local github credentials
+.github/set_credentials.sh
+
 # Local .terraform directories
 **/.terraform/*
 

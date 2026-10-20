@@ -10,7 +10,7 @@ Get notes by day.
 
 ## Setting infrastucture credentials
 
-`infra/.az/set_credentails.sh`
+`.az/set_credentails.sh`
 
 ```
  #!/usr/bin/env bash
@@ -20,6 +20,17 @@ export ARM_CLIENT_SECRET="<PASSWORD_VALUE>"
 export ARM_SUBSCRIPTION_ID="<SUBSCRIPTION_ID>"
 export ARM_TENANT_ID="<TENANT_VALUE>"
 ```
+
+## Setting github credentials
+
+`.github/set_credentials.sh`
+
+```
+ #!/usr/bin/env bash
+ 
+export GH_TOKEN="<GITHUB_PAT_TOKEN>"
+```
+
 ## Creating and Retrieving Notes
 
 Running the API in a container locally with the CosmosDB emulator
