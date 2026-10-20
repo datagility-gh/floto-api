@@ -77,6 +77,8 @@ stages:
               echo "Label 'infra-deploy' not found. Skipping infrastructure deployment."
             fi
           fi
+        env:
+          GH_TOKEN: $(non-prod-gh-api-pat-token)
 
     - task: Bash@3
       displayName: Install xpath
