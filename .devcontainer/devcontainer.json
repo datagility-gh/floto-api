@@ -19,7 +19,8 @@
 			"installYarnUsingApt": true,
 			"version": "lts",
 			"nvmVersion": "latest"
-		}
+		},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
 	"runArgs": [
 		"--name",

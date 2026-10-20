@@ -28,6 +28,8 @@ CI_IMAGE_TAG := $(PROJECT_BUILD_VERSION)
 INFRA_DIR := infra
 INFRA_AUTO_APPROVE := false
 export TF_VAR_stack := $(STACK)
+GITHUB_REPO := datagility-gh/floto-api
+GITHUB_INFRA_DEPLOY_LABEL := infra-deploy
 
 # interactively authenticate the azure cli
 .PHONY: login/az
@@ -276,6 +278,19 @@ version/client/remote/patch:
 # Deploy local code/infra to an Azure stack
 # . ./.az/set_credentials.sh && ENV=non_prod make deploy STACK=main INFRA_AUTO_APPROVE=true
 deploy: login/az/sp build/docker/az push/docker apply
+
+# Get the PR number associated with a given commit hash
+# . ./.github/set_credentials.sh && make pr/c622a262ce031e2355c44462a1e4f036b64b676b
+.PHONY: pr/%
+pr/%:
+	@echo $(shell gh api repos/$(GITHUB_REPO)/commits/$*/pulls --jq '.[0].number')
+
+# Get whether the infrastructure deployment label has been added to a PR
+# . ./.github/set_credentials.sh && make pr/infra/11
+.PHONY: pr/infra/%
+pr/infra/%:
+	@echo $(shell gh api repos/$(GITHUB_REPO)/issues/$*/labels \
+		--jq 'map(select(.name=="$(GITHUB_INFRA_DEPLOY_LABEL)")) | length')
 
 # Infra
 init: check-for-env

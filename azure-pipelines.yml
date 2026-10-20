@@ -50,31 +50,6 @@ stages:
         codeCoverageTool: 'Cobertura'
         summaryFileLocation: 'Floto.Test/TestResults/*/In/*/coverage.cobertura.xml'
 
-    - task: Bash@3
-      displayName: Install xpath
-      inputs:
-        targetType: 'inline'
-        script: |
-          sudo apt update && sudo apt install libxml-xpath-perl
-
-    - task: DockerInstaller@0
-      displayName: Install docker tools
-      inputs:
-        dockerVersion: '23.0.6'
-
-    - task: AzureCLI@2
-      displayName: Push the docker image
-      inputs:
-        azureSubscription: $(azureSubscription)
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: 'make push/docker PROJECT_PATCH_VERSION=$(Build.BuildId) STACK=$(Build.SourceBranchName)'
-
-    - task: TerraformInstaller@1
-      displayName: Install terraform tools
-      inputs:
-        terraformVersion: '1.6.4'
-
     - task: AzureKeyVault@2
       displayName: Fetch Key Vault secrets
       inputs:
@@ -82,8 +57,56 @@ stages:
         KeyVaultName: $(keyVaultName)
         RunAsPreJob: false
 
+    - task: Bash@3
+      displayName: Check for infra-deploy label
+      inputs:
+        targetType: 'inline'
+        script: |
+          PR_NUMBER=$(make pr/$(Build.SourceVersion))
+          echo "PR_NUMBER=$PR_NUMBER"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR found for commit $(Build.SourceVersion). Aborting."
+          else
+            echo "Checking if PR #$PR_NUMBER has the 'infra-deploy' label..."
+            LABEL_COUNT=$(make pr/infra/$PR_NUMBER)
+            echo "LABEL_COUNT=$LABEL_COUNT"
+            if [ "$LABEL_COUNT" -gt 0 ]; then
+              echo "Label 'infra-deploy' found. Proceeding with infrastructure deployment."
+              echo "##vso[task.setvariable variable=InfraDeploy;]true"
+            else
+              echo "Label 'infra-deploy' not found. Skipping infrastructure deployment."
+            fi
+          fi
+      env:
+        GH_TOKEN: $(non-prod-gh-api-pat-token)
+
+    - task: Bash@3
+      displayName: Install xpath
+      condition: eq(variables['InfraDeploy'], 'true')
+      inputs:
+        targetType: 'inline'
+        script: |
+          sudo apt update && sudo apt install libxml-xpath-perl
+
+    - task: AzureCLI@2
+      displayName: Push the docker image
+      condition: eq(variables['InfraDeploy'], 'true')
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: 'make push/docker PROJECT_PATCH_VERSION=$(Build.BuildId) STACK=$(Build.SourceBranchName)'
+
+
+    - task: TerraformInstaller@1
+      displayName: Install terraform tools
+      condition: eq(variables['InfraDeploy'], 'true')
+      inputs:
+        terraformVersion: '1.6.4'
+
     - task: AzureCLI@2
       displayName: Apply terraform
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         azureSubscription: $(azureSubscription)
         addSpnToEnvironment: true
@@ -102,6 +125,7 @@ stages:
 
     - task: AzureCLI@2
       displayName: Update container app image
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         azureSubscription: $(azureSubscription)
         scriptType: 'bash'
@@ -110,16 +134,19 @@ stages:
 
     - task: UseNode@1
       displayName: Install node tools
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         version: '18.x'
 
     - task: npmAuthenticate@0
       displayName: Add credentials for private npm registry
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         workingFile: floto-client/.npmrc
 
     - task: Bash@3
       displayName: Run client integration tests
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         targetType: 'inline'
         script: |
@@ -128,6 +155,7 @@ stages:
 
     - task: PublishTestResults@2
       displayName: 'Publish client integration test results'
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         testRunTitle: 'Client Integration Tests'
         testResultsFormat: 'JUnit'
