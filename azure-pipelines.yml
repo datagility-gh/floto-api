@@ -57,11 +57,6 @@ stages:
         script: |
           sudo apt update && sudo apt install libxml-xpath-perl
 
-    # - task: DockerInstaller@0
-    #   displayName: Install docker tools
-    #   inputs:
-    #     dockerVersion: '23.0.6'
-
     - task: AzureCLI@2
       displayName: Push the docker image
       inputs:
@@ -104,6 +99,7 @@ stages:
 
     - task: AzureCLI@2
       displayName: Update container app image
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         azureSubscription: $(azureSubscription)
         scriptType: 'bash'
@@ -112,16 +108,19 @@ stages:
 
     - task: UseNode@1
       displayName: Install node tools
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         version: '18.x'
 
     - task: npmAuthenticate@0
       displayName: Add credentials for private npm registry
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         workingFile: floto-client/.npmrc
 
     - task: Bash@3
       displayName: Run client integration tests
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         targetType: 'inline'
         script: |
@@ -130,6 +129,7 @@ stages:
 
     - task: PublishTestResults@2
       displayName: 'Publish client integration test results'
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         testRunTitle: 'Client Integration Tests'
         testResultsFormat: 'JUnit'
