@@ -50,8 +50,37 @@ stages:
         codeCoverageTool: 'Cobertura'
         summaryFileLocation: 'Floto.Test/TestResults/*/In/*/coverage.cobertura.xml'
 
+    - task: AzureKeyVault@2
+      displayName: Fetch Key Vault secrets
+      inputs:
+        azureSubscription: $(azureSubscription)
+        KeyVaultName: $(keyVaultName)
+        RunAsPreJob: false
+
+    - task: Bash@3
+      displayName: Check for infra-deploy label
+      inputs:
+        targetType: 'inline'
+        script: |
+          PR_NUMBER=$(make pr/$(Build.SourceVersion))
+          echo "PR_NUMBER=$PR_NUMBER"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR found for commit $(Build.SourceVersion). Aborting."
+          else
+            echo "Checking if PR #$PR_NUMBER has the 'infra-deploy' label..."
+            LABEL_COUNT=$(make pr/infra/$PR_NUMBER)
+            echo "LABEL_COUNT=$LABEL_COUNT"
+            if [ "$LABEL_COUNT" -gt 0 ]; then
+              echo "Label 'infra-deploy' found. Proceeding with infrastructure deployment."
+              echo "##vso[task.setvariable variable=InfraDeploy;]true"
+            else
+              echo "Label 'infra-deploy' not found. Skipping infrastructure deployment."
+            fi
+          fi
+
     - task: Bash@3
       displayName: Install xpath
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         targetType: 'inline'
         script: |
@@ -59,18 +88,13 @@ stages:
 
     - task: AzureCLI@2
       displayName: Push the docker image
+      condition: eq(variables['InfraDeploy'], 'true')
       inputs:
         azureSubscription: $(azureSubscription)
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: 'make push/docker PROJECT_PATCH_VERSION=$(Build.BuildId) STACK=$(Build.SourceBranchName)'
 
-    - task: AzureKeyVault@2
-      displayName: Fetch Key Vault secrets
-      inputs:
-        azureSubscription: $(azureSubscription)
-        KeyVaultName: $(keyVaultName)
-        RunAsPreJob: false
 
     - task: TerraformInstaller@1
       displayName: Install terraform tools
